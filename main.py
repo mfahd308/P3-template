@@ -19,7 +19,7 @@ class Game:
     def __init__(self, title, platform, rating, genre):
         self.title = title
         self.platform = platform
-        self.rating = rating
+        self.rating = round(rating, 1)
         self.genre = genre
 
     def get_details(self):
@@ -27,6 +27,9 @@ class Game:
         genreString = ", ".join(self.genre)
         return f"Title: {self.title}\nPlatform: {platformString}\nRating: {self.rating}\nGenre: {genreString}"
 
+    # Make less than comparison opposite so the heapq (min heap) is implemented as max heap
+    def __lt__(self, other):
+        return self.rating > other.rating
 
 # Function to get the game data
 def auth():
@@ -59,7 +62,7 @@ def get_game_data(access_token, limit=500, offset=0):
 
 def main():
     access_token = auth()
-    maxGames = 25000
+    maxGames = 250
     limit = 500
     offset = 0
 
@@ -82,6 +85,7 @@ def main():
     return games
 
 def gameWindow(data):
+
     # tkinter rootwindow
     root = tk.Tk()
     root.title("Game Search Engine")
@@ -95,6 +99,9 @@ def gameWindow(data):
 
     gameInfo = tk.Label(root, text="", bg="black", fg="white", anchor="nw", justify="left", wraplength=750)
     gameInfo.pack(pady=10, fill=tk.BOTH, expand=True)
+
+
+
 
     def listGames():
         """need to make a frame to create the sorting options, slider or combobox"""
@@ -128,6 +135,26 @@ def gameWindow(data):
         # Bind double-click event to the Listbox
         listBox.bind("<<ListboxSelect>>", selectGame)
 
+    # Create button that lists top 5 games and hides top 5 games when toggled and untoggled
+    heap = createHeap(data)
+    top5 = getTop5(heap)
+    top5Shown = False;
+
+    def clicked_top_5():
+        nonlocal top5Shown
+        if not top5Shown:
+            gameInfo.config(
+                text="\n\n".join([game.get_details() for game in top5]),
+                bg="grey"
+            )
+            top5Button.config(text="Hide Top 5 Rated Games", command=clicked_top_5)
+        else:
+            gameInfo.config(text="", bg="black")
+            top5Button.config(text="Show Top 5 Rated Games", command=clicked_top_5)
+
+        top5Shown = not top5Shown  # Toggle state
+
+
     def userNamePrompt():
         userName = name.get()
         if userName.isalpha():
@@ -135,6 +162,10 @@ def gameWindow(data):
             name.destroy()
             submitButton.destroy()
             listGames()
+
+            global top5Button
+            top5Button = tk.Button(root, text="Show Top 5 Rated Games", command=clicked_top_5)
+            top5Button.pack(pady=10)
         else:
             label.config(text="Please enter your name", bg="black", fg="red")
     """visualize function that uses matplotlib to display certain data (e.g., how many games are on each platform)"""
@@ -146,6 +177,17 @@ def gameWindow(data):
     exitButton.pack(pady=10, side=tk.BOTTOM)
 
     root.mainloop()
+
+def createHeap(games):
+    heap = []
+    for game in games:
+        heapq.heappush(heap, game)
+    return heap
+
+def getTop5(heap):
+    return [heapq.heappop(heap) for i in range(5)]
+
+
 
 
 if __name__ == "__main__":
