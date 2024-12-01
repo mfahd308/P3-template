@@ -10,9 +10,8 @@ import matplotlib.backends.backend_tkagg
 # Data structure implementation
 import heapq
 
-# IGN Dataset
-from bridges.bridges import *
-from bridges.data_src_dependent.data_source import *
+import requests
+
 
 
 # Game Class Object
@@ -24,24 +23,63 @@ class Game:
         self.genre = genre
 
     def get_details(self):
-        return f"Title: {self.title}\nPlatform: {self.platform}\nRating: {self.rating}\nGenre: {self.genre}"
+        platformString = ", ".join(self.platform)
+        genreString = ", ".join(self.genre)
+        return f"Title: {self.title}\nPlatform: {platformString}\nRating: {self.rating}\nGenre: {genreString}"
 
 
 # Function to get the game data
+def auth():
+    # twitch auth
+    client_id = "m5ytptns6qbg8z11o21cu8rxv8c1bn"
+    client_secret = "b6jokdw7idz54bggwzhb0ft5t5uyur"
+
+    auth_response = requests.post("https://id.twitch.tv/oauth2/token", data={
+        "client_id": client_id,
+        "client_secret": client_secret,
+        "grant_type": "client_credentials"
+    })
+    auth_response.raise_for_status()
+    auth_response = auth_response.json()
+    return auth_response.get("access_token")
+
+def get_game_data(access_token, limit=500, offset=0):
+    headers = {
+        "Client-ID": "m5ytptns6qbg8z11o21cu8rxv8c1bn",
+        "Authorization": f"Bearer {access_token}"
+    }
+    query = f"""
+    fields name, platforms.name, genres.name, aggregated_rating;
+    limit {limit};
+    offset {offset};
+    """
+    response = requests.post("https://api.igdb.com/v4/games", headers=headers, data=query)
+    response.raise_for_status()
+    return response.json()
+
 def main():
-    # Create the bridges object
-    """figure out a way to either have the user get their bridges info or hide mine"""
-    bridges = Bridges(0, "paapa", "1501703593714")
+    access_token = auth()
+    maxGames = 25000
+    limit = 500
+    offset = 0
 
-    my_list = get_game_data()
-
-    """Need to sort the list after initializing the game objects"""
-    # List of all game objects
     games = []
-    for game in my_list:
-        games.append(Game(game.title, game.platform, game.rating, game.genre))
+    while len(games) < maxGames:
+        data = get_game_data(access_token, limit, offset)
+        if not data:
+            break
+        for game in data:
+            title = game.get("name", "Unknown")
+            platform = [p["name"] for p in game.get("platforms", []) if "name" in p]
+            rating = game.get("aggregated_rating")
+            genre = [g["name"] for g in game.get("genres", []) if "name" in g]
+            if title and platform and rating is not None and genre:
+                games.append(Game(title, platform, rating, genre))
+                if len(games) >= maxGames:
+                    break
+        offset += limit
+    print(len(games))
     return games
-
 
 def gameWindow(data):
     # tkinter rootwindow
