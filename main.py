@@ -13,7 +13,6 @@ import heapq
 import requests
 
 
-
 # Game Class Object
 class Game:
     def __init__(self, title, platform, rating, genre):
@@ -31,6 +30,7 @@ class Game:
     def __lt__(self, other):
         return self.rating > other.rating
 
+
 # Function to get the game data
 def auth():
     # twitch auth
@@ -46,6 +46,7 @@ def auth():
     auth_response = auth_response.json()
     return auth_response.get("access_token")
 
+
 def get_game_data(access_token, limit=500, offset=0):
     headers = {
         "Client-ID": "m5ytptns6qbg8z11o21cu8rxv8c1bn",
@@ -59,6 +60,7 @@ def get_game_data(access_token, limit=500, offset=0):
     response = requests.post("https://api.igdb.com/v4/games", headers=headers, data=query)
     response.raise_for_status()
     return response.json()
+
 
 def main():
     access_token = auth()
@@ -84,8 +86,8 @@ def main():
     print(len(games))
     return games
 
-def gameWindow(data):
 
+def gameWindow(data):
     # tkinter rootwindow
     root = tk.Tk()
     root.title("Game Search Engine")
@@ -100,9 +102,6 @@ def gameWindow(data):
     gameInfo = tk.Label(root, text="", bg="black", fg="white", anchor="nw", justify="left", wraplength=750)
     gameInfo.pack(pady=10, fill=tk.BOTH, expand=True)
 
-
-
-
     def listGames():
         """need to make a frame to create the sorting options, slider or combobox"""
 
@@ -111,7 +110,8 @@ def gameWindow(data):
         frame.pack(fill=tk.BOTH, expand=True, pady=10)
 
         # Listbox to display game titles
-        listBox = tk.Listbox(frame, width=50, height=20, bg="black", fg="white", font=("Helvetica", 12), selectbackground="green")
+        listBox = tk.Listbox(frame, width=50, height=20, bg="black", fg="white", font=("Helvetica", 12),
+                             selectbackground="green")
         listBox.pack(side=tk.LEFT, fill=tk.Y)
 
         # Scrollbar for the Listbox
@@ -130,15 +130,17 @@ def gameWindow(data):
             selected_index = listBox.curselection()
             if selected_index:  # Ensure a game is selected
                 selected_game = data[selected_index[0]]
-                gameInfo.config(text=selected_game.get_details(), bg="grey")  # Update grey area
+                gameInfo.config(text=selected_game.get_details(), bg="grey")
+                if top5Shown:
+                    clicked_top_5()
 
-        # Bind double-click event to the Listbox
+        # Bind selection event to the Listbox
         listBox.bind("<<ListboxSelect>>", selectGame)
 
     # Create button that lists top 5 games and hides top 5 games when toggled and untoggled
     heap = createHeap(data)
     top5 = getTop5(heap)
-    top5Shown = False;
+    top5Shown = False
 
     def clicked_top_5():
         nonlocal top5Shown
@@ -147,13 +149,12 @@ def gameWindow(data):
                 text="\n\n".join([game.get_details() for game in top5]),
                 bg="grey"
             )
-            top5Button.config(text="Hide Top 5 Rated Games", command=clicked_top_5)
+            top5Button.config(text="Hide Top 5 Rated Games")
         else:
             gameInfo.config(text="", bg="black")
-            top5Button.config(text="Show Top 5 Rated Games", command=clicked_top_5)
+            top5Button.config(text="Show Top 5 Rated Games")
 
         top5Shown = not top5Shown  # Toggle state
-
 
     def userNamePrompt():
         userName = name.get()
@@ -168,6 +169,7 @@ def gameWindow(data):
             top5Button.pack(pady=10)
         else:
             label.config(text="Please enter your name", bg="black", fg="red")
+
     """visualize function that uses matplotlib to display certain data (e.g., how many games are on each platform)"""
 
     submitButton = tk.Button(root, text="Submit", command=userNamePrompt)
@@ -178,16 +180,16 @@ def gameWindow(data):
 
     root.mainloop()
 
+
 def createHeap(games):
     heap = []
     for game in games:
         heapq.heappush(heap, game)
     return heap
 
+
 def getTop5(heap):
     return [heapq.heappop(heap) for i in range(5)]
-
-
 
 
 if __name__ == "__main__":
