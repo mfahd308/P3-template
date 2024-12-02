@@ -136,7 +136,7 @@ def gameWindow(data):
             visualizeButton.place(relx=0.7, rely=0.7)
             genreButton = tk.Button(root, text="Count of Games in Each Genre", command=genreCountVisualize)
             genreButton.place(relx=0.7, rely=0.8)
-            averageButton = tk.Button(root, text="Average of Rating of Each Genre", command=averageVisualize)
+            averageButton = tk.Button(root, text="Average Rating of Each Genre", command=averageVisualize)
             averageButton.place(relx=0.7, rely=0.9)
         else:
             label.config(text="Please enter your name", bg="black", fg="red")
