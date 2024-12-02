@@ -132,7 +132,7 @@ def gameWindow(data):
             name.destroy()
             submitButton.destroy()
             listGames()
-            visualizeButton = tk.Button(root, text="Count of Games on Each Platform", command=platformCountVisualize)
+            visualizeButton = tk.Button(root, text="Number of Games on Each Platform", command=platformCountVisualize)
             visualizeButton.place(relx=0.7, rely=0.7)
             genreButton = tk.Button(root, text="Count of Games in Each Genre", command=genreCountVisualize)
             genreButton.place(relx=0.7, rely=0.8)
