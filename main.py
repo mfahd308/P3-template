@@ -17,7 +17,7 @@ class Game:
     def __init__(self, title, platform, rating, genre):
         self.title = title
         self.platform = platform
-        self.rating = rating
+        self.rating = round(rating,1)
         self.genre = genre
 
     def get_details(self):
