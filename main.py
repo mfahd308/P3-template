@@ -12,7 +12,7 @@ import heapq
 import requests
 
 # Import the GameHashMap from the separate file
-from heapsearch import GameHashMap
+from hashmap import GameHashMap
 
 
 # Game Class Object
