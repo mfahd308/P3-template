@@ -12,6 +12,10 @@ import heapq
 
 import requests
 
+# Import the GameHashMap from the separate file
+from hashmap import GameHashMap
+
+
 # Game Class Object
 class Game:
     def __init__(self, title, platform, rating, genre):
@@ -25,10 +29,11 @@ class Game:
         genreString = ", ".join(self.genre)
         return f"Title: {self.title}\nPlatform: {platformString}\nRating: {self.rating}\nGenre: {genreString}"
 
+    def __lt__(self, other):
+        return self.rating > other.rating
 
 # Function to get the game data
 def auth():
-    # twitch auth
     client_id = "m5ytptns6qbg8z11o21cu8rxv8c1bn"
     client_secret = "b6jokdw7idz54bggwzhb0ft5t5uyur"
 
@@ -55,6 +60,8 @@ def get_game_data(access_token, limit=500, offset=0):
     response.raise_for_status()
     return response.json()
 
+
+# Main function to fetch and process game data
 def main():
     access_token = auth()
     maxGames = 250
@@ -78,11 +85,16 @@ def main():
         offset += limit
     return games
 
+
+# GUI Window
 def gameWindow(data):
+    # Initialize the GameHashMap
+    game_map = GameHashMap(data)
+
     # tkinter rootwindow
     root = tk.Tk()
     root.title("Game Search Engine")
-    root.geometry("1104x840")
+    root.geometry("1472x862")
     root.configure(background="black")
     label = tk.Label(root, text="What is your name?", bg="black", fg="white")
     label.pack(pady=10)
@@ -90,13 +102,67 @@ def gameWindow(data):
     name = tk.Entry(root, width=50)
     name.pack(pady=10)
 
-    gameInfo = tk.Label(root, text="", bg="black", fg="white", anchor="nw", justify="left", wraplength=750)
+    gameInfo = tk.Label(
+        root, text="", bg="black", fg="white", anchor="nw", justify="left", wraplength=750
+    )
     gameInfo.pack(pady=10, fill=tk.BOTH, expand=True)
 
-    def listGames():
-        """need to make a frame to create the sorting options, slider or combobox"""
+    def genreRatings():
+        genre_heaps = sortIntoHeaps(data)
+        genres_list = [
+            "Pinball", "Adventure", "Indie", "Arcade", "Visual Novel",
+            "Card & Board Game", "MOBA", "Point-and-click", "Fighting",
+            "Shooter", "Music", "Platform", "Puzzle", "Racing",
+            "Real Time Strategy (RTS)", "Role-playing (RPG)", "Simulator",
+            "Sport", "Strategy", "Turn-based strategy (TBS)", "Tactical",
+            "Hack and slash/Beat 'em up", "Quiz/Trivia"
+        ]
 
-        # Create a frame to hold both the Listbox and Scrollbar
+        # Create drop-down (ComboBox) for genres, initially hidden
+        genre_label = tk.Label(root, text="See Genre's Top Rated Games:", bg="black", fg="white")
+        genre_label.pack(pady=10)
+
+        genre_combobox = ttk.Combobox(root, values=genres_list, width=50, state="readonly")
+        genre_combobox.pack(pady=10)
+
+        def genreSelected(event):
+            selected_genre = genre_combobox.get()
+
+            top5Games = getTop5(genre_heaps[selected_genre])
+
+            # Create a popup window for the top 5 games
+            popup = tk.Toplevel(root)
+            popup.title(f"Top 5 Games in {selected_genre} Genre")
+            popup.geometry("300x300")  # Adjust size as needed
+            popup.resizable(False, False)  # Prevent resizing
+
+            canvas = tk.Canvas(popup)
+            canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+            scrollbar = tk.Scrollbar(popup, orient="vertical", command=canvas.yview)
+            scrollbar.pack(side=tk.RIGHT, fill="y")
+
+            canvas.config(yscrollcommand=scrollbar.set)
+
+            info_frame = tk.Frame(canvas, bg="grey")
+            canvas.create_window((0, 0), window=info_frame, anchor="nw")
+
+            # Display the top 5 games in the frame inside the popup
+            for i, game in enumerate(top5Games):
+                game_details = tk.Label(info_frame, text=f"{i + 1}.\n{game.get_details()}",
+                                        anchor="nw", justify="left", wraplength=250)
+                game_details.pack(pady=5, fill=tk.BOTH, expand=True)
+
+            info_frame.update_idletasks()
+            canvas.config(scrollregion=canvas.bbox("all"))
+
+            close_button = tk.Button(popup, text="Close", command=popup.destroy)
+            close_button.pack(pady=10)
+
+        genre_combobox.bind("<<ComboboxSelected>>", genreSelected)
+
+    def listGames():
+        """List all games in the database."""
         frame = tk.Frame(root, bg="black")
         frame.pack(fill=tk.BOTH, expand=True, pady=10)
 
@@ -120,10 +186,46 @@ def gameWindow(data):
             selected_index = listBox.curselection()
             if selected_index:  # Ensure a game is selected
                 selected_game = data[selected_index[0]]
-                gameInfo.config(text=selected_game.get_details(), bg="grey")  # Update grey area
+                gameInfo.config(text=selected_game.get_details(), bg="grey")
 
-        # Bind double-click event to the Listbox
-        listBox.bind("<<ListboxSelect>>", selectGame)
+        listBox.bind("<<ListboxSelect>>", selectGame) #connects user interaction with logic to display
+
+    def searchGame():
+        """Search for a specific game."""
+
+        search_label = tk.Label(root, text="Search for a game:", bg="black", fg="white")
+        search_label.pack(pady=10)
+
+        search_entry = tk.Entry(root, width=50)
+        search_entry.pack(pady=10)
+
+        def searchButtonClicked():
+
+            search_query = search_entry.get().strip()
+
+            if search_query:
+
+                result = game_map.search_game_by_title(search_query)
+
+                if result:
+
+                    genre_str = ", ".join(result["genre"])
+                    platform_str = ", ".join(result["platform"])
+                    gameInfo.config(
+                        text=f"Title: {search_query}\nGenre: {genre_str}\nRating: {result['rating']}\nPlatform: {platform_str}",
+                        bg="gray",
+                        fg="white",
+                    )
+
+                else:
+
+                    gameInfo.config(text="Game not found!", bg="black", fg="red")
+
+        # else:
+        #
+        #     gameInfo.config(text="Please enter a valid game title.", bg="black", fg="red")
+        search_button = tk.Button(root, text="Search", command=searchButtonClicked)
+        search_button.pack(pady=10)
 
     def userNamePrompt():
         userName = name.get()
@@ -138,6 +240,8 @@ def gameWindow(data):
             genreButton.place(relx=0.7, rely=0.8)
             averageButton = tk.Button(root, text="Average Rating of Each Genre", command=averageVisualize)
             averageButton.place(relx=0.7, rely=0.9)
+            genreRatings()
+            searchGame()
         else:
             label.config(text="Please enter your name", bg="black", fg="red")
     """visualize functions that uses matplotlib to display certain data (e.g., how many games are on each platform)"""
@@ -240,6 +344,20 @@ def gameWindow(data):
 
     root.mainloop()
 
+def getTop5(heap):
+    extracted = []
+    for i in range(min(5, len(heap))):
+        extracted.append(heapq.heappop(heap))
+    return extracted
+
+def sortIntoHeaps(games):
+    heap_collection = {}
+    for game in games:
+        for singleGenre in game.genre:
+            if singleGenre not in heap_collection:
+                heap_collection[singleGenre] = []
+            heapq.heappush(heap_collection[singleGenre], game)
+    return heap_collection
 
 if __name__ == "__main__":
     data = main()
