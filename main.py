@@ -64,7 +64,7 @@ def get_game_data(access_token, limit=500, offset=0):
 # Main function to fetch and process game data
 def main():
     access_token = auth()
-    maxGames = 250
+    maxGames = 25000
     limit = 500
     offset = 0
 
