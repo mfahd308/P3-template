@@ -13,6 +13,7 @@ import heapq
 import requests
 
 
+
 # Game Class Object
 class Game:
     def __init__(self, title, platform, rating, genre):
@@ -30,7 +31,6 @@ class Game:
     def __lt__(self, other):
         return self.rating > other.rating
 
-
 # Function to get the game data
 def auth():
     # twitch auth
@@ -46,7 +46,6 @@ def auth():
     auth_response = auth_response.json()
     return auth_response.get("access_token")
 
-
 def get_game_data(access_token, limit=500, offset=0):
     headers = {
         "Client-ID": "m5ytptns6qbg8z11o21cu8rxv8c1bn",
@@ -60,7 +59,6 @@ def get_game_data(access_token, limit=500, offset=0):
     response = requests.post("https://api.igdb.com/v4/games", headers=headers, data=query)
     response.raise_for_status()
     return response.json()
-
 
 def main():
     access_token = auth()
@@ -86,8 +84,8 @@ def main():
     print(len(games))
     return games
 
-
 def gameWindow(data):
+
     # tkinter rootwindow
     root = tk.Tk()
     root.title("Game Search Engine")
@@ -102,6 +100,67 @@ def gameWindow(data):
     gameInfo = tk.Label(root, text="", bg="black", fg="white", anchor="nw", justify="left", wraplength=750)
     gameInfo.pack(pady=10, fill=tk.BOTH, expand=True)
 
+    # Define genres list
+
+    def genreRatings():
+        genre_heaps = sortIntoHeaps(data)
+        genres_list = [
+            "Pinball", "Adventure", "Indie", "Arcade", "Visual Novel",
+            "Card & Board Game", "MOBA", "Point-and-click", "Fighting",
+            "Shooter", "Music", "Platform", "Puzzle", "Racing",
+            "Real Time Strategy (RTS)", "Role-playing (RPG)", "Simulator",
+            "Sport", "Strategy", "Turn-based strategy (TBS)", "Tactical",
+            "Hack and slash/Beat 'em up", "Quiz/Trivia"
+        ]
+
+        # Create drop-down (ComboBox) for genres, initially hidden
+        genre_label = tk.Label(root, text="See Genre's Top Rated Games:", bg="black", fg="white")
+        genre_label.pack(pady=10)
+
+        genre_combobox = ttk.Combobox(root, values=genres_list, width=50, state="readonly")
+        genre_combobox.pack(pady=10)
+
+        def genreSelected(event):
+            selected_genre = genre_combobox.get()
+
+            top5Games = getTop5(genre_heaps[selected_genre])
+
+            # Create a popup window for the top 5 games
+            popup = tk.Toplevel(root)
+            popup.title(f"Top 5 Games in {selected_genre} Genre")
+            popup.geometry("300x300")  # Adjust size as needed
+            popup.resizable(False, False)  # Prevent resizing
+
+            canvas = tk.Canvas(popup)
+            canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+            scrollbar = tk.Scrollbar(popup, orient="vertical", command=canvas.yview)
+            scrollbar.pack(side=tk.RIGHT, fill="y")
+
+            canvas.config(yscrollcommand=scrollbar.set)
+
+            info_frame = tk.Frame(canvas, bg="grey")
+            canvas.create_window((0, 0), window=info_frame, anchor="nw")
+
+            # Display the top 5 games in the frame inside the popup
+            for i, game in enumerate(top5Games):
+                game_details = tk.Label(info_frame, text=f"{i + 1}.\n{game.get_details()}",
+                                        anchor="nw", justify="left", wraplength=250)
+                game_details.pack(pady=5, fill=tk.BOTH, expand=True)
+
+            info_frame.update_idletasks()
+            canvas.config(scrollregion=canvas.bbox("all"))
+
+            close_button = tk.Button(popup, text="Close", command=popup.destroy)
+            close_button.pack(pady=10)
+
+
+
+        genre_combobox.bind("<<ComboboxSelected>>", genreSelected)
+
+
+
+
     def listGames():
         """need to make a frame to create the sorting options, slider or combobox"""
 
@@ -110,8 +169,7 @@ def gameWindow(data):
         frame.pack(fill=tk.BOTH, expand=True, pady=10)
 
         # Listbox to display game titles
-        listBox = tk.Listbox(frame, width=50, height=20, bg="black", fg="white", font=("Helvetica", 12),
-                             selectbackground="green")
+        listBox = tk.Listbox(frame, width=50, height=20, bg="black", fg="white", font=("Helvetica", 12), selectbackground="green")
         listBox.pack(side=tk.LEFT, fill=tk.Y)
 
         # Scrollbar for the Listbox
@@ -130,31 +188,15 @@ def gameWindow(data):
             selected_index = listBox.curselection()
             if selected_index:  # Ensure a game is selected
                 selected_game = data[selected_index[0]]
-                gameInfo.config(text=selected_game.get_details(), bg="grey")
-                if top5Shown:
-                    clicked_top_5()
+                gameInfo.config(text=selected_game.get_details(), bg="grey")  # Update grey area
 
-        # Bind selection event to the Listbox
+        # Bind double-click event to the Listbox
         listBox.bind("<<ListboxSelect>>", selectGame)
 
     # Create button that lists top 5 games and hides top 5 games when toggled and untoggled
-    heap = createHeap(data)
-    top5 = getTop5(heap)
-    top5Shown = False
+    heap_colleectopn = sortIntoHeaps(data)
 
-    def clicked_top_5():
-        nonlocal top5Shown
-        if not top5Shown:
-            gameInfo.config(
-                text="\n\n".join([game.get_details() for game in top5]),
-                bg="grey"
-            )
-            top5Button.config(text="Hide Top 5 Rated Games")
-        else:
-            gameInfo.config(text="", bg="black")
-            top5Button.config(text="Show Top 5 Rated Games")
 
-        top5Shown = not top5Shown  # Toggle state
 
     def userNamePrompt():
         userName = name.get()
@@ -163,13 +205,9 @@ def gameWindow(data):
             name.destroy()
             submitButton.destroy()
             listGames()
-
-            global top5Button
-            top5Button = tk.Button(root, text="Show Top 5 Rated Games", command=clicked_top_5)
-            top5Button.pack(pady=10)
+            genreRatings()
         else:
             label.config(text="Please enter your name", bg="black", fg="red")
-
     """visualize function that uses matplotlib to display certain data (e.g., how many games are on each platform)"""
 
     submitButton = tk.Button(root, text="Submit", command=userNamePrompt)
@@ -181,15 +219,22 @@ def gameWindow(data):
     root.mainloop()
 
 
-def createHeap(games):
-    heap = []
-    for game in games:
-        heapq.heappush(heap, game)
-    return heap
-
-
 def getTop5(heap):
-    return [heapq.heappop(heap) for i in range(5)]
+    extracted = []
+    for i in range(min(5, len(heap))):
+        extracted.append(heapq.heappop(heap))
+    return extracted
+
+def sortIntoHeaps(games):
+    heap_collection = {}
+    for game in games:
+        for singleGenre in game.genre:
+            if singleGenre not in heap_collection:
+                heap_collection[singleGenre] = []
+            heapq.heappush(heap_collection[singleGenre], game)
+    return heap_collection
+
+
 
 
 if __name__ == "__main__":
