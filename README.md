@@ -68,6 +68,4 @@ The application offers visualizations such as:
 - Average rating per genre
 #### Top-rated Games by Genre
 Users can view a list of top-rated games by genre, showing the game title, platform, and rating.
-### Additional Resources
-- [IGDB API Documentation](https://api-docs.igdb.com/)
 
