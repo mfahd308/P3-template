@@ -13,7 +13,7 @@ This repository contains the source code and documentation for the **Game Search
   - [Game Listing](#game-listing)
   - [Visualizations](#visualizations)
   - [Top-rated Games by Genre](#top-rated-games-by-genre)
-- [Additional Resources](#additional-resources)
+
 
 ---
 
