@@ -3,7 +3,6 @@ import tkinter as tk
 import tkinter.ttk as ttk
 
 # Data manipulation
-import pandas as pd
 import matplotlib.pyplot as mpl
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
@@ -64,7 +63,7 @@ def get_game_data(access_token, limit=500, offset=0):
 # Main function to fetch and process game data
 def main():
     access_token = auth()
-    maxGames = 25000
+    maxGames = 1000
     limit = 500
     offset = 0
 
