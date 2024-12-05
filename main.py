@@ -183,15 +183,18 @@ def gameWindow(data):
 
         # Function to display selected game's details in the grey area
         def selectGame(event):
+            
             selected_index = listBox.curselection()
-            if selected_index:  # Ensure a game is selected
+            
+            if selected_index:  # ensure game selected
+                
                 selected_game = data[selected_index[0]]
                 gameInfo.config(text=selected_game.get_details(), bg="grey")
 
         listBox.bind("<<ListboxSelect>>", selectGame) #connects user interaction with logic to display
 
     def searchGame():
-        """Search for a specific game."""
+        """search for specific game."""
 
         search_label = tk.Label(root, text="Search for a game:", bg="black", fg="white")
         search_label.pack(pady=10)
@@ -199,7 +202,7 @@ def gameWindow(data):
         search_entry = tk.Entry(root, width=50)
         search_entry.pack(pady=10)
 
-        def searchButtonClicked():
+        def search_button():
 
             search_query = search_entry.get().strip()
 
@@ -219,12 +222,10 @@ def gameWindow(data):
 
                 else:
 
-                    gameInfo.config(text="Game not found!", bg="black", fg="red")
+                    gameInfo.config(text="Game isnt found", bg="black", fg="red")
 
-        # else:
-        #
-        #     gameInfo.config(text="Please enter a valid game title.", bg="black", fg="red")
-        search_button = tk.Button(root, text="Search", command=searchButtonClicked)
+        
+        search_button = tk.Button(root, text="Search", command=search_button)
         search_button.pack(pady=10)
 
     def userNamePrompt():
