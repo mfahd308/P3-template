@@ -20,7 +20,8 @@ This repository contains the source code and documentation for the **Game Search
 ## Overview
 
 The **Game Search Engine** fetches video game data from the [IGDB API](https://api-docs.igdb.com/), allowing users to explore game information such as titles, platforms, genres, and ratings. With features like game search, data visualization, and top-rated game recommendations, the application serves as a robust platform for exploring game data.
-![Menu Image](resources/menu.png)
+
+![Menu Image](resources/images/menu.png)
 
 ---
 
