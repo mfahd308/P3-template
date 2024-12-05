@@ -118,7 +118,7 @@ def gameWindow(data):
             "Hack and slash/Beat 'em up", "Quiz/Trivia"
         ]
 
-        # Create drop-down (ComboBox) for genres, initially hidden
+        # Create drop-down for genres
         genre_label = tk.Label(root, text="See Genre's Top Rated Games:", bg="black", fg="white")
         genre_label.pack(pady=10)
 
@@ -133,8 +133,8 @@ def gameWindow(data):
             # Create a popup window for the top 5 games
             popup = tk.Toplevel(root)
             popup.title(f"Top 5 Games in {selected_genre} Genre")
-            popup.geometry("300x300")  # Adjust size as needed
-            popup.resizable(False, False)  # Prevent resizing
+            popup.geometry("300x300")
+            popup.resizable(False, False)
 
             canvas = tk.Canvas(popup)
             canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
